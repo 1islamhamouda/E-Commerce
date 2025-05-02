@@ -10,7 +10,7 @@ const Nav = () => {
     <>
 
 <Navbar fluid rounded className=" p-0 md:p-4  dark:bg-gray-900">
-  <NavbarBrand href="https://flowbite-react.com" className="me-7 ms-3 md:ms-0  translate-y-5 md:translate-y-0  w-full md:w-auto ">
+  <NavbarBrand href="/" className="me-7 ms-3 md:ms-0  translate-y-5 md:translate-y-0  w-full md:w-auto ">
     <img src={freshIcon} alt="Fresh Logo" className="w-36 h-10 bg-white rounded p-1" />
   </NavbarBrand>
   <div className=" items-end translate-x-[14em] -translate-y-5 md:-translate-y-0  md:order-last flex md:translate-x-[-1em] Dropdown outline-none border-none">

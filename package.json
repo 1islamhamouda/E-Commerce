@@ -1,9 +1,12 @@
 {
+  "homepage": "https://github.com/1islamhamouda/E-Commerce",
   "name": "ecommerce",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
@@ -24,6 +27,7 @@
     "axios": "^1.9.0",
     "flowbite-react": "^0.11.7",
     "formik": "^2.4.6",
+    "gh-pages": "^6.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.5.1",

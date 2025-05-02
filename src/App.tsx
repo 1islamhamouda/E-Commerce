@@ -13,7 +13,7 @@ import { NameProvider } from './context/NameProvider';
 import BrandDetails from './components/BrandDetails/BrandDetails';
 import UserContext from './context/UserContext';
 import FavoriteList from './components/FavoriteList/FavoriteList';
-import Address from './components/FavoriteList/Address';
+
 
 
 export const router = createBrowserRouter([{
@@ -48,10 +48,7 @@ export const router = createBrowserRouter([{
       path: 'ProductDetails/:id/:category',
       element:<ProductDetails/> ,
     },
-    // {
-    //   path: 'BrandsDetails/:id',
-    //   element:<BrandDetails/> ,
-    // },
+    
     {
       path: '/BrandDetails/:id',
       element:<BrandDetails/> ,

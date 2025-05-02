@@ -1,14 +1,14 @@
-import { Button, Checkbox, Label, TextInput } from "flowbite-react";
+import { Button, Label, TextInput } from "flowbite-react";
 import  {Link, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
 import Alert from '@mui/material/Alert';
-import React from "react";
+import React, { useContext } from "react";
 import { useName } from "../../../context/NameProvider";
 import {  Spinner } from "flowbite-react";
 import img from '../../../assets/freshIcon.svg'
-import { UserToken } from "../../../context/UserContext";
+import { User} from "../../../context/UserContext"; // Adjust the path as needed
 
 
 interface RegisterDetails {
@@ -20,35 +20,42 @@ interface RegisterDetails {
 }
 const Register = () => {
   const navigate = useNavigate();
-  const {setUser}=UserToken(); // Call UserToken if needed, or remove this line if unnecessary
+  // const {setUser}=UserToken();
+ 
+ 
+  const userContext = useContext(User);
+  if (!userContext) {
+    throw new Error("User context is not provided");
+  }
+  const { user, setUser } = userContext;
  let {setName}= useName();
   const [error,setError]=React.useState<String>('');
   const [isLoading, setIsLoading] = React.useState<Boolean>(false);
   const [isError, setIsError] = React.useState<Boolean>(false);
 
-  const signInDetails:RegisterDetails={
-    name: "",
-    email:"",
-    password:"",
-    repassword:"",
-    phone:""
-  }
 
   const handleSignIn = (values: RegisterDetails) => {
     setIsLoading(true);
+    
+    
     return axios.post(`https://ecommerce.routemisr.com/api/v1/auth/signup`, values)
     .then((response) => {
       console.log(response.data);
       setIsLoading(false);
       localStorage.setItem("user", JSON.stringify(response.data));
-      localStorage.setItem("token", response.data.token);
-      setUser(response.data.token);
+      localStorage.setItem("token", response?.data?.token);
+      if(response?.data.message=='success'){
+        console.log(response?.data?.token,'okay');
+      setUser(response?.data.token);
+    }
       navigate("/login");
       setName(values.name);
     })
     .catch((error) => {
       setIsLoading(false);
       console.error("Error during login:", error);
+     
+      
     });
       
   };
@@ -85,6 +92,7 @@ const Register = () => {
     },
   });
 
+ console.log('okokokokk',user);
  
   
 

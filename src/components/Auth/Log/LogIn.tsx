@@ -4,32 +4,40 @@ import  {Link, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
-import React from "react";
+import React, { useContext } from "react";
 import img from '../../../assets/freshIcon.svg'
+import { User} from "../../../context/UserContext"; // Adjust the path as needed
 
-interface LogInDetails {
-  email: string;
-  password: string;
-}
+// Removed unused LogInDetails interface
 const LogIn:React.FC = () => {
   const navigate = useNavigate();
-  let logInDetails:LogInDetails={
-    email: "",
-    password: "",
-  }
   const [isLoading, setIsLoading] = React.useState<Boolean>(false);
   const [isError, setIsError] = React.useState<Boolean>(false);
   const [error, setError] = React.useState<String>('');
 
+  const userContext = useContext(User);
+   if (!userContext) {
+     throw new Error("UserContext is not provided");
+   }
+   const {user, setUser } = userContext;
   const handleLogin = (values:any) => {
+    setIsLoading(true);
     return axios.post(`https://ecommerce.routemisr.com/api/v1/auth/signin`, values)
       .then((response) => {
-        console.log(response.data);
+        if(response?.data.message === 'success')
+          setUser(response?.data?.token);
+        
         localStorage.setItem("user", JSON.stringify(response.data));
-        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("token", response?.data?.token);
+
+        setIsLoading(false);
+        setIsError(false);
       })
       .catch((error) => {
         console.error("Error during login:", error);
+        setIsLoading(false);
+        setIsError(true);
+        setError(error);
       });
   };
   
@@ -52,6 +60,7 @@ const LogIn:React.FC = () => {
     },
   });
   
+   console.log('hhhhh',user);
    
   return (
     <>

@@ -22,6 +22,9 @@ const FavoriteButton = ({ productId }: FavoriteButtonProps) => {
     }
   };
 
+  
+  
+
   return (
     <button
       onClick={handleFavoriteToggle}

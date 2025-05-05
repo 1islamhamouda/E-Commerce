@@ -27,6 +27,7 @@ const Search: React.FC<SearchProps> = ({ products, onSearch }) => {
             product?.title.split(' ').slice(0, 2).join(' ').toLowerCase().includes(searchQuery.toLowerCase())
         );
         console.log(filteredProducts, 'Filtered Products');
+        
         onSearch(filteredProducts);
 
     };

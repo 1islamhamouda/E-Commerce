@@ -43,7 +43,7 @@ const Register = () => {
       console.log(response.data);
       setIsLoading(false);
       localStorage.setItem("user", JSON.stringify(response.data));
-      localStorage.setItem("token", response?.data?.token);
+      localStorage.setItem("tokenn", response?.data?.token);
       if(response?.data.message=='success'){
         console.log(response?.data?.token,'okay');
       setUser(response?.data.token);

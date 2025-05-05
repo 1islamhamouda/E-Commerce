@@ -4,7 +4,7 @@ import CategoriesSlide from "../../SideDesigns/CategoriesSlide/CategoriesSlide";
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import {  JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal, useContext, useEffect, useState } from "react";
+import {  JSXElementConstructor, Key, ReactElement, ReactNode, ReactPortal, SetStateAction, useContext, useEffect, useState } from "react";
 import { useName } from "../../context/NameProvider";
 import { Alert } from "flowbite-react";
 import FavoriteButton from "../FavoriteList/FavoriteButton";
@@ -71,9 +71,8 @@ if(isError){
     console.log('Fetched')
   }
 
-  console.log('ok',searchResulte);
   
-  
+  console.log('token',user);
   
   
   
@@ -92,10 +91,11 @@ if(isError){
   
        
 
-       
+       <Search products={data?.data.data || []} onSearch={setSearchResulte} />
 {searchResulte.length > 0 ? (<>
 <div className="flex  justify-between  py-8">
        <h1 className="text-3xl font-bold ms-2">Products</h1>
+       
        </div>
   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mt-3  ">
   {searchResulte.map((product: {
@@ -130,11 +130,6 @@ if(isError){
 </div>
 </>): <p>No matching products found.</p>}
        
-        
-
-
-
-
     </>
   )
 }

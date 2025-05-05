@@ -2,9 +2,8 @@ import axios from "axios";
 
 export const getWishlistFromStorage = () => JSON.parse(localStorage.getItem("wishlist") || "[]");
 
-const saveWishlistToStorage = (wishlist: any[]) => {
-  localStorage.setItem("wishlist", JSON.stringify(wishlist));
-};
+const saveWishlistToStorage = (wishlist: any[]) => localStorage.setItem("wishlist", JSON.stringify(wishlist));
+
 
 export const addToWishlist = async (productId: string) => {
   try {
@@ -14,7 +13,7 @@ export const addToWishlist = async (productId: string) => {
       {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${localStorage.getItem("tokenn")}`,
         },
       }
     );
@@ -30,7 +29,7 @@ export const addToWishlist = async (productId: string) => {
 export const removeFromWishlist = async (productId: string) => {
   try {
     await axios.delete(`https://ecommerce.routemisr.com/api/v1/wishlist/${productId}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      headers: { Authorization: `Bearer ${localStorage.getItem("tokenn")}` },
     });
 
     const updatedWishlist = getWishlistFromStorage().filter((item: { _id: string }) => item._id !== productId);

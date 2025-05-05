@@ -18,16 +18,16 @@ const UserContext = ({children}:any) => {
 const [user, setUser] = useState<{ id: string; name: string; email: string } | null>(null);
 
 useEffect(() => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("tokenn");
    if(token){
-     const parseToken= JSON.parse(token);
-    setUser(parseToken);
+    
+    setUser(token);
    }
 }, []);
 
 const removeToken = () => {
   setUser(null);
-  localStorage.removeItem("token");
+  localStorage.removeItem("tokenn");
 };
 
 

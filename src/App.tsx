@@ -13,6 +13,7 @@ import { NameProvider } from './context/NameProvider';
 import BrandDetails from './components/BrandDetails/BrandDetails';
 import UserContext from './context/UserContext';
 import FavoriteList from './components/FavoriteList/FavoriteList';
+import  { CartProvider } from './context/CartContext/AddProvider';
 
 
 
@@ -71,11 +72,10 @@ export const router = createBrowserRouter([{
 const App = () => {
   return (
     <>
+   
     <UserContext>
       <NameProvider>
-
       <RouterProvider router={router} />
-      
       </NameProvider>
     </UserContext>
    

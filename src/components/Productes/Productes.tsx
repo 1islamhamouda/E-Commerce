@@ -69,7 +69,12 @@ const Productes = () => {
         </div>
       </div>
     </Link>
-   
+    <button
+      onClick={() => addToCart(product._id)}
+      className="bg-blue-500 text-white px-3 py-1 rounded mt-2"
+    >
+        Add to Cart
+      </button>
       </div>
   ))}
 </div>

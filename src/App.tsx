@@ -1,4 +1,3 @@
-
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import Layout from './components/Layout/Layout';
 import Home from './components/Home/Home';
@@ -14,8 +13,8 @@ import BrandDetails from './components/BrandDetails/BrandDetails';
 import UserContext from './context/UserContext';
 import FavoriteList from './components/FavoriteList/FavoriteList';
 import  { CartProvider } from './context/CartContext/AddProvider';
-
-
+import ProtectedElement from './components/ProtucteElement';  
+import { FavoriteProvider } from './context/FavoriteContext/FavoriteProvider';
 
 export const router = createBrowserRouter([{
   path: '/',
@@ -23,36 +22,36 @@ export const router = createBrowserRouter([{
   children: [
     {
       path: '/',
-      element:<Home /> ,
+      element:<ProtectedElement><Home /></ProtectedElement> ,
     },
     {
       path: 'Cart',
-      element:<Cart/> ,
+      element:<CartProvider><Cart/></CartProvider> ,
     },
     {
       path: 'Brands',
-      element:<Brands/> ,
+      element:<ProtectedElement><Brands/></ProtectedElement> ,
     },
     {
       path: 'Categories',
-      element: <Categories/>,
+      element: <ProtectedElement><Categories/></ProtectedElement> ,
     },
     {
       path: 'Products',
-      element:<Productes/> ,
+      element: <ProtectedElement><Productes/></ProtectedElement>,
     },
     {
       path:'Favorite',
-      element:<FavoriteList/> ,
+      element:<ProtectedElement><FavoriteList/></ProtectedElement> ,
     },
     {
       path: 'ProductDetails/:id/:category',
-      element:<ProductDetails/> ,
+      element:<ProtectedElement><ProductDetails/></ProtectedElement> ,
     },
     
     {
       path: '/BrandDetails/:id',
-      element:<BrandDetails/> ,
+      element:<ProtectedElement><BrandDetails/></ProtectedElement> ,
     },
     {
       path: 'Login',
@@ -71,16 +70,15 @@ export const router = createBrowserRouter([{
 }]);
 const App = () => {
   return (
-    <>
-   
-    <UserContext>
-      <NameProvider>
-      <RouterProvider router={router} />
-      </NameProvider>
-    </UserContext>
-   
-      
-    </>
+    <FavoriteProvider>
+      <UserContext>
+        <NameProvider>
+          <CartProvider>
+            <RouterProvider router={router} />
+          </CartProvider>
+        </NameProvider>
+      </UserContext>
+    </FavoriteProvider>
   )
 }
 

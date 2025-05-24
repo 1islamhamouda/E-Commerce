@@ -1,89 +1,146 @@
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
 import { Link } from "react-router-dom";
-import { useCart} from "../../context/CartContext/AddProvider";
-// import { useCart} from "../../context/CartContext/AddProvider";
+import { useContext, useState,useEffect } from "react";
+import { User } from "../../context/UserContext";
+import { productAPI } from "../../utils/api";
+import { useCart } from "../../context/CartContext/AddProvider";
+import Search from "../Home/Search";
+import FavoriteButton from "../FavoriteList/FavoriteButton";
+import toast from 'react-hot-toast';
+
+interface Product {
+  _id: string;
+  name: string;
+  title: string;
+  category: {
+    name: string;
+  };
+  price: number;
+  imageCover: string;
+  ratingsAverage: number;
+  images: string[];
+  description: string;
+  quantity: number;
+  sold: number;
+  priceAfterDiscount: number;
+}
+
+interface ProductsResponse {
+  data: {
+    data: Product[];
+  };
+}
 
 const Productes = () => {
- 
-  const getProducts = ()=>{
-    return axios.get('https://ecommerce.routemisr.com/api/v1/products');
-   }
-   const {data :products,error,isError,isLoading} = useQuery({
-     queryKey:['products'],
-     queryFn: getProducts,
-     
-     }
-     
-   );
-  //  const {addToCart}=useCart();
-   if(isLoading) return <div className="flex justify-center items-center w-full h-screen">Loading...</div>
-   if(isError){
-     console.log('error')
-     console.log(error)
-   }
-     
-    // async function localData({ productId }: { productId: any; }) {
-    //   try {
-    //     console.log('Calling addToCart with productId:', productId);
-    //     const res = await addToCart(productId);
-    //     console.log('Add to cart response:', res);
-       
-        
-    //     return res;
-    //   } catch (error) {
-    //     console.error('Error in localData:', error);
-    //     throw error;
-    //   }
-    // }
-   
-     
-  //  let token=localStorage.getItem('tokenn');
-
-  //  if(token){
-  //   console.log('okkkkkk',data?.data.data.map((product: {_id:any})=>product._id));
-  //  }
-  //  else{
-  //   console.error('noooooooo')
-  //  }
-
-
-   
-    return (
-      <>
-            <h1 className="text-3xl font-bold">Products</h1>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mt-3">
-  {products?.data?.data.map((product:any) => (
-    <div key={product._id}>
-    <Link to={`/ProductDetails/${product?._id}/${product.category.name}`}  className="">
-      <div className="flex flex-col items-center bg-white shadow-lg rounded-lg p-3">
-        <img src={product.imageCover} alt={product.name} className="w-full" />
-        <h3 className="text-lg font-semibold text-center">
-          {product.title.split(' ').slice(0, 2).join(' ')}
-        </h3>
-        <p className="text-green-500"> {product.category.name}</p>
-        <div className="flex justify-between items-center w-full px-4 pt-2">
-          <p className="text-xl font-bold">${product.price}</p>
-          <p>{product.ratingsAverage} <i className="fa-solid fa-star text-yellow-300"></i></p>
-
-        </div>
-      </div>
-    </Link>
-    <button
-      onClick={() => addToCart(product._id)}
-      className="bg-blue-500 text-white px-3 py-1 rounded mt-2"
-    >
-        Add to Cart
-      </button>
-      </div>
-  ))}
-</div>
-      </>
-    )
-  }
+  const [searchResults, setSearchResults] = useState<Product[]>([]);
   
-  export default Productes
+  const userContext = useContext(User);
+  if (!userContext) {
+    throw new Error('UserContext is not provided');
+  }
+  const { user, token } = userContext;
+  console.log('user',user, 'token',token);
 
+  const { addToCart } = useCart();
 
+  const { data, error, isError, isLoading } = useQuery({
+    queryKey: ['products'],
+    queryFn: async () => {
+      const response = await productAPI.getProducts();
+      return response;
+    }
+  });
 
+  useEffect(() => {
+    if (data?.data) {
+      setSearchResults(data.data as Product[]);
+    }
+  }, [data]);
+
+  const handleAddToCart = async (productId: string, event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    if (!token) {
+      window.location.href = '/login';
+      return;
+    }
+    try {
+      await addToCart(productId);
+      toast.success('Product added to cart successfully!');
+      console.log('Product added to cart:', productId);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast.error('Failed to add product to cart.');
+    }
+  };
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center w-full h-screen">Loading...</div>;
+  }
+
+  if (isError) {
+    return (
+      <div className="flex justify-center items-center w-full h-screen text-red-500">
+        Error loading products: {error instanceof Error ? error.message : 'Unknown error'}
+      </div>
+    );
+  }
+
+  return (
+    <>
+    
+    <Search products={data?.data as Product[] || []} onSearch={setSearchResults} />
+
+    {searchResults.length > 0 ? (
+      <>
+        <div className="flex justify-between py-8">
+          <h1 className="text-3xl font-bold ms-2">Products</h1>
+        </div>
+        
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mt-3">
+          {searchResults.map((product) => (
+            <div 
+              key={product._id} 
+              className="relative cursor-pointer hover:scale-105 transition-transform"
+            >
+              <div className="p-2">
+                <FavoriteButton productId={product._id} />
+              </div>
+              <Link to={`/ProductDetails/${product._id}/${product.category.name}`}>
+                <div className="flex flex-col items-center bg-white shadow-lg rounded-lg p-3">
+                  <img 
+                    src={product.imageCover} 
+                    alt={product.name} 
+                    className="w-full h-48 object-cover"
+                  />
+                  <h3 className="text-lg font-semibold text-center mt-2">
+                    {product.title.split(' ').slice(0, 2).join(' ')}
+                  </h3>
+                  <p className="text-green-500">{product.category.name}</p>
+                  <div className="flex justify-between items-center w-full px-4 pt-2">
+                    <p className="text-xl font-bold text-gray-500">${product.price}</p>
+                    <p className="flex items-center">
+                      {product.ratingsAverage} 
+                      <i className="fa-solid fa-star text-yellow-300 ml-1"></i>
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  className="w-full bg-blue-500 text-white py-2 text-center hover:bg-blue-600 transition-colors"
+                  onClick={(event) => handleAddToCart(product._id, event)}
+                >
+                  Add to Cart
+                </button>
+              </Link>
+            </div>
+          ))}
+        </div>
+      </>
+    ) : (
+      <p className="text-center text-gray-500 mt-4">No matching products found.</p>
+    )}
+  </>
+  );
+};
+
+export default Productes;
   

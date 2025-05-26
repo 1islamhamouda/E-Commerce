@@ -1,9 +1,9 @@
 import { createContext, useEffect, useState } from "react"
 
 interface UserData {
-  id: string;
   name: string;
   email: string;
+  role: string;
 }
 
 interface UserContextType {
@@ -21,7 +21,7 @@ const [user, setUser] = useState<UserData | null>(null);
 const [token, setToken] = useState<string | null>(null);
 
 useEffect(() => {
-  const storedToken = localStorage.getItem("tokenn");
+  const storedToken = localStorage.getItem("token");
   const storedUser = localStorage.getItem("user");
   
   if (storedToken) {
@@ -45,13 +45,13 @@ const handleSetUser = (userData: UserData) => {
 
 const handleSetToken = (newToken: string) => {
   setToken(newToken);
-  localStorage.setItem("tokenn", newToken);
+  localStorage.setItem("token", newToken);
 };
 
 const handleRemoveToken = () => {
   setUser(null);
   setToken(null);
-  localStorage.removeItem("tokenn");
+  localStorage.removeItem("token");
   localStorage.removeItem("user");
 };
 

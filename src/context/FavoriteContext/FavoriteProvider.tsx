@@ -1,98 +1,52 @@
-import React, { createContext, useContext } from "react";
-import axios from "axios";
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getWishlistFromStorage } from '../../components/FavoriteList/wishApi';
 import toast from 'react-hot-toast';
 
 interface FavoriteContextType {
-  addToFavorite: (productId: string) => Promise<void>;
-  removeFromFavorite: (productId: string) => Promise<void>;
-  getFavorites: () => Promise<any[]>;
+  wishlist: any[];
+  setWishlist: React.Dispatch<React.SetStateAction<any[]>>;
+  isInWishlist: (productId: string) => boolean;
+  refreshWishlist: () => void;
 }
 
 const FavoriteContext = createContext<FavoriteContextType | undefined>(undefined);
 
 export const FavoriteProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const getToken = () => {
-    const token = localStorage.getItem("tokenn");
-    if (!token) return null;
+  const [wishlist, setWishlist] = useState<any[]>([]);
+
+  const refreshWishlist = React.useCallback(() => {
     try {
-      return JSON.parse(token);
-    } catch {
-      return token;
-    }
-  };
-
-  const addToFavorite = async (productId: string) => {
-    try {
-      const token = getToken();
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
-
-      const response = await axios.post(
-        "https://ecommerce.routemisr.com/api/v1/wishlist",
-        { productId },
-        { headers: { token } }
-      );
-
-      if (response.data.status === "success") {
-        return response.data;
-      } else {
-        throw new Error("Failed to add item to favorites");
-      }
+      const storedWishlist = getWishlistFromStorage();
+      setWishlist(prevWishlist => {
+        // Only update if the wishlist has actually changed
+        if (JSON.stringify(prevWishlist) !== JSON.stringify(storedWishlist)) {
+          return storedWishlist;
+        }
+        return prevWishlist;
+      });
     } catch (error) {
-      console.error("Error adding to favorites:", error);
-      throw error;
+      console.error('Error refreshing wishlist:', error);
+      toast.error('Failed to refresh wishlist', {
+        duration: 3000,
+        position: 'top-center',
+        style: {
+          background: '#f44336',
+          color: '#000',
+        },
+      });
     }
-  };
+  }, []); // Empty dependency array since getWishlistFromStorage is stable
 
-  const removeFromFavorite = async (productId: string) => {
-    try {
-      const token = getToken();
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
+  const isInWishlist = React.useCallback((productId: string) => {
+    return wishlist.some(item => item._id === productId);
+  }, [wishlist]);
 
-      const response = await axios.delete(
-        `https://ecommerce.routemisr.com/api/v1/wishlist/${productId}`,
-        { headers: { token } }
-      );
-
-      if (response.data.status === "success") {
-        return response.data;
-      } else {
-        throw new Error("Failed to remove item from favorites");
-      }
-    } catch (error) {
-      console.error("Error removing from favorites:", error);
-      throw error;
-    }
-  };
-
-  const getFavorites = async () => {
-    try {
-      const token = getToken();
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
-
-      const response = await axios.get(
-        "https://ecommerce.routemisr.com/api/v1/wishlist",
-        { headers: { token } }
-      );
-
-      if (response.data.status === "success") {
-        return response.data.data;
-      } else {
-        throw new Error("Failed to fetch favorites");
-      }
-    } catch (error) {
-      console.error("Error fetching favorites:", error);
-      throw error;
-    }
-  };
+  useEffect(() => {
+    refreshWishlist();
+  }, []); // Only run once on mount
 
   return (
-    <FavoriteContext.Provider value={{ addToFavorite, removeFromFavorite, getFavorites }}>
+    <FavoriteContext.Provider value={{ wishlist, setWishlist, isInWishlist, refreshWishlist }}>
       {children}
     </FavoriteContext.Provider>
   );
@@ -100,6 +54,8 @@ export const FavoriteProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
 export const useFavorite = () => {
   const context = useContext(FavoriteContext);
-  if (!context) throw new Error("useFavorite must be used within a FavoriteProvider");
+  if (context === undefined) {
+    throw new Error('useFavorite must be used within a FavoriteProvider');
+  }
   return context;
 }; 

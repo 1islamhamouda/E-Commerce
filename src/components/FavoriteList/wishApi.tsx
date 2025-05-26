@@ -1,40 +1,116 @@
 import axios from "axios";
+import toast from 'react-hot-toast';
 
-export const getWishlistFromStorage = () => JSON.parse(localStorage.getItem("wishlist") || "[]");
+const BASE_URL = 'https://ecommerce.routemisr.com/api/v1';
 
-const saveWishlistToStorage = (wishlist: any[]) => localStorage.setItem("wishlist", JSON.stringify(wishlist));
+// Helper function to get token
+const getToken = () => {
+  const token = localStorage.getItem('tokenn');
+  if (!token) {
+    throw new Error('No authentication token found');
+  }
+  return token;
+};
 
+// Helper function to handle token expiration
+const handleTokenExpiration = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('wishlist');
+  window.location.href = '/login';
+};
 
-export const addToWishlist = async (productId: string) => {
+export const getWishlistFromAPI = async () => {
   try {
-    const response = await axios.post(
-      "https://ecommerce.routemisr.com/api/v1/wishlist",
-      { productId },
+    const token = getToken();
+    const response = await axios.get(
+      `${BASE_URL}/wishlist`,
       {
         headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("tokenn")}`,
+          token,
         },
       }
     );
+    if (response.data?.data) {
+      saveWishlistToStorage(response.data.data);
+      return response.data.data;
+    }
+    return [];
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      handleTokenExpiration();
+      throw new Error('Please login to view wishlist');
+    }
+    throw error;
+  }
+};
 
-    const updatedWishlist = [...getWishlistFromStorage(), response.data];
-    saveWishlistToStorage(updatedWishlist); // Save to localStorage
-    return response.data;
+export const getWishlistFromStorage = () => {
+  try {
+    const wishlist = localStorage.getItem('wishlist');
+    return wishlist ? JSON.parse(wishlist) : [];
   } catch (error) {
-    console.error("Error adding product to wishlist:", error);
+    console.error('Error getting wishlist from storage:', error);
+    return [];
+  }
+};
+
+export const saveWishlistToStorage = (wishlist: any[]) => {
+  try {
+    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+  } catch (error) {
+    console.error('Error saving wishlist to storage:', error);
+  }
+};
+
+export const addToWishlist = async (productId: string) => {
+  try {
+    const token = getToken();
+    const response = await axios.post(
+      `${BASE_URL}/wishlist`,
+      { productId },
+      {
+        headers: {
+          token,
+        },
+      }
+    );
+    if (response.data?.data) {
+      const currentWishlist = getWishlistFromStorage();
+      saveWishlistToStorage([...currentWishlist, response.data.data]);
+      return response.data.data;
+    }
+    return null;
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      handleTokenExpiration();
+      throw new Error('Please login to add items to wishlist');
+    }
+    throw error;
   }
 };
 
 export const removeFromWishlist = async (productId: string) => {
   try {
-    await axios.delete(`https://ecommerce.routemisr.com/api/v1/wishlist/${productId}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem("tokenn")}` },
-    });
-
-    const updatedWishlist = getWishlistFromStorage().filter((item: { _id: string }) => item._id !== productId);
-    saveWishlistToStorage(updatedWishlist); // Save to localStorage
-  } catch (error) {
-    console.error("Error removing product from wishlist:", error);
+    const token = getToken();
+    const response = await axios.delete(
+      `${BASE_URL}/wishlist/${productId}`,
+      {
+        headers: {
+          token,
+        },
+      }
+    );
+    if (response.data?.status === 'success') {
+      const currentWishlist = getWishlistFromStorage();
+      saveWishlistToStorage(currentWishlist.filter((item: any) => item._id !== productId));
+      return true;
+    }
+    return false;
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      handleTokenExpiration();
+      throw new Error('Please login to remove items from wishlist');
+    }
+    throw error;
   }
-};
+}; 

@@ -5,11 +5,11 @@ import Nav from '../Navbar/Nav'
 const Layout = () => {
   return (
     <>
-    <Nav/>
-    <div className='container'>
-      <Outlet/>
+      <Nav />
+      <div className='container'>
+        <Outlet/>
       </div>
-   <Footer/>
+      <Footer/>
     </>
   )
 }

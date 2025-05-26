@@ -1,266 +1,476 @@
 import { useEffect, useState } from "react";
 import { useCart } from "../../context/CartContext/AddProvider";
-import toast from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
+import { FaTrash, FaMinus, FaPlus, FaShoppingCart } from 'react-icons/fa';
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { motion } from 'framer-motion';
+import { FaSpinner, FaShoppingBag } from 'react-icons/fa';
+import { MdError } from 'react-icons/md';
 
-interface CartItem {
-  product: {
-    id: string;
-    title: string;
-    imageCover: string;
-    price: number;
-  };
-  count: number;
+interface Product {
+  _id: string;
+  title: string;
+  imageCover: string;
+  price: number;
 }
 
-interface CartResponse {
-  status: string;
-  data: {
-    products: CartItem[];
-    totalCartPrice: number;
-  };
+interface CartItem {
+  count: number;
+  _id: string;
+  product: Product;
+  price: number;
+}
+
+interface CartData {
+  _id: string; // Cart ID
+  products: CartItem[];
+  totalCartPrice: number;
 }
 
 const Cart = () => {
   const { getCart, updateCartItem, removeCartItem, clearCart } = useCart();
-  const [cartItems, setCartItems] = useState<CartResponse['data']>({ products: [], totalCartPrice: 0 });
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [cartData, setCartData] = useState<CartData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
-  const getCartItems = async () => {
+  const fetchCartData = async () => {
+    if (!token) {
+      setError('Please login to view your cart');
+      setIsLoading(false);
+      toast.error('Please login to view your cart');
+      navigate('/login');
+      return;
+    }
+
     try {
       setIsLoading(true);
-      const response = await getCart();
-      if (response?.status === 'success') {
-        setCartItems(response.data);
+      // Use the getCart function from the context
+      const response = await getCart(); // response is now CartDetails | null
+      
+      if (response && response.products.length > 0) {
+        setCartData(response);
+      } else if (response?._id) { // Handle empty cart case with a valid cart ID
+        setCartData({ _id: response._id, products: [], totalCartPrice: 0 });
+      } else { // Handle case where getCart returned null (no token or other issue)
+         setCartData(null); // Explicitly set to null
+         // Error is already handled by getCart context function if API failed
       }
-    } catch (error) {
-      console.error("Error fetching cart items:", error);
-      toast.error("Failed to load cart items");
-    } finally {
-      setIsLoading(false);
-    }
-  }
+      // Clear any previous error state if data is fetched successfully
+      setError(null);
 
-  const handleUpdateQuantity = async (productId: string, count: number) => {
-    try {
-      setIsLoading(true);
-      await updateCartItem(productId, count);
-      toast.success("Cart updated successfully");
-      getCartItems();
-    } catch (error) {
-      console.error("Error updating cart:", error);
-      toast.error("Failed to update cart");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  const handleRemoveItem = async (productId: string) => {
-    try {
-      setIsLoading(true);
-      await removeCartItem(productId);
-      toast.success("Item removed from cart");
-      getCartItems();
-    } catch (error) {
-      console.error("Error removing item:", error);
-      toast.error("Failed to remove item");
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  const handleClearCart = async () => {
-    try {
-      setIsLoading(true);
-      await clearCart();
-      toast.success("Cart cleared successfully");
-      getCartItems();
-    } catch (error) {
-      console.error("Error clearing cart:", error);
-      toast.error("Failed to clear cart");
+    } catch (err: any) {
+      console.error("Error fetching cart items:", err);
+      // Errors from getCart are already thrown and handled by react-hot-toast
+      // We can set local error state if needed, but toast is primary feedback
+      setError('Failed to load cart. Please try again.'); // Set a generic error message
+      setCartData(null); // Clear cart data on fetch error
     } finally {
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    getCartItems();
-  }, [refreshTrigger]);
+  const handleUpdateQuantity = async (productId: string, count: number) => {
+    if (count < 1) return; // Prevent setting quantity below 1
+
+    const toastId = toast.loading('Updating quantity...', {
+        style: {
+            background: '#333',
+            color: '#fff',
+            borderRadius: '10px',
+        },
+    });
+
+    try {
+      // Use the updateCartItem function from the context
+      await updateCartItem(productId, count);
+      toast.success('Quantity updated', {
+          id: toastId,
+          style: {
+              background: '#333',
+              color: '#fff',
+              borderRadius: '10px',
+          },
+      });
+      fetchCartData(); // Re-fetch cart data to update display
+    } catch (err: any) {
+      console.error("Error updating cart:", err);
+      toast.error(err.response?.data?.message || 'Failed to update quantity', {
+          id: toastId,
+          style: {
+              background: '#333',
+              color: '#fff',
+              borderRadius: '10px',
+          },
+      });
+    }
+  };
+
+  const handleRemoveItem = async (productId: string) => {
+    const toastId = toast.loading('Removing item...', {
+        style: {
+            background: '#333',
+            color: '#fff',
+            borderRadius: '10px',
+        },
+    });
+
+    try {
+      // Use the removeCartItem function from the context
+      await removeCartItem(productId);
+      toast.success('Item removed from cart', {
+          id: toastId,
+          style: {
+              background: '#333',
+              color: '#fff',
+              borderRadius: '10px',
+          },
+      });
+      fetchCartData(); // Re-fetch cart data to update display
+    } catch (err: any) {
+      console.error("Error removing item:", err);
+      toast.error(err.response?.data?.message || 'Failed to remove item', {
+          id: toastId,
+          style: {
+              background: '#333',
+              color: '#fff',
+              borderRadius: '10px',
+          },
+      });
+    }
+  };
+
+  const handleClearCart = async () => {
+    const toastId = toast.loading('Clearing cart...', {
+        style: {
+            background: '#333',
+            color: '#fff',
+            borderRadius: '10px',
+        },
+    });
+
+    try {
+      // Use the clearCart function from the context
+      await clearCart();
+      toast.success('Cart cleared successfully', {
+          id: toastId,
+          style: {
+              background: '#333',
+              color: '#fff',
+              borderRadius: '10px',
+          },
+      });
+      // Set cart to empty after clearing locally for faster UI update
+      setCartData({ _id: cartData?._id || 'empty', products: [], totalCartPrice: 0 });
+    } catch (err: any) {
+      console.error("Error clearing cart:", err);
+      toast.error(err.response?.data?.message || 'Failed to clear cart', {
+          id: toastId,
+          style: {
+              background: '#333',
+              color: '#fff',
+              borderRadius: '10px',
+          },
+      });
+    }
+  };
+
+  // Add state and handlers for shipping address
+  const [shippingAddress, setShippingAddress] = useState({
+      details: '',
+      phone: '',
+      city: '',
+  });
+
+  const handleShippingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setShippingAddress({ ...shippingAddress, [e.target.name]: e.target.value });
+  };
+
+  const handleCheckout = async () => {
+      if (!cartData?._id || cartData?.products.length === 0) {
+          toast.error('Your cart is empty!', {
+              style: {
+                  background: '#f44336',
+                  color: '#fff',
+                  borderRadius: '10px',
+              },
+          });
+          return;
+      }
+
+      if (!shippingAddress.details || !shippingAddress.phone || !shippingAddress.city) {
+          toast.error('Please provide shipping address details!', {
+              style: {
+                  background: '#f44336',
+                  color: '#fff',
+                  borderRadius: '10px',
+              },
+          });
+          return;
+      }
+
+      const toastId = toast.loading('Initiating checkout...', {
+          style: {
+              background: '#333',
+              color: '#fff',
+              borderRadius: '10px',
+          },
+      });
+
+      try {
+          const response = await axios.post(
+              `https://ecommerce.routemisr.com/api/v1/orders/checkout-session/${cartData._id}?url=http://localhost:3000`,
+              { shippingAddress },
+              {
+                  headers: { token },
+              }
+          );
+
+          if (response?.data?.status === 'success') {
+              toast.success('Checkout session created!', {
+                  id: toastId,
+                  style: {
+                      background: '#4CAF50',
+                      color: '#fff',
+                      borderRadius: '10px',
+                  },
+              });
+              // Redirect user to payment page
+              if (response.data.session?.url) {
+                window.location.href = response.data.session.url;
+              }
+          } else {
+               toast.error(response?.data?.message || 'Failed to create checkout session', {
+                  id: toastId,
+                  style: {
+                      background: '#f44336',
+                      color: '#fff',
+                      borderRadius: '10px',
+                  },
+              });
+          }
+
+      } catch (err: any) {
+          console.error('Error initiating checkout:', err);
+          toast.error(err.response?.data?.message || 'Failed to initiate checkout', {
+              id: toastId,
+              style: {
+                  background: '#f44336',
+                  color: '#fff',
+                  borderRadius: '10px',
+              },
+          });
+      }
+  };
 
   useEffect(() => {
+    fetchCartData();
+  }, [token, navigate, getCart]); // Add getCart to dependencies
+
+  // Consider adding a storage event listener if cart changes in other tabs
+  useEffect(() => {
     const handleStorageChange = () => {
-      setRefreshTrigger(prev => prev + 1);
+       fetchCartData(); // Re-fetch cart data when storage changes
     };
 
     window.addEventListener('storage', handleStorageChange);
     return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+  }, []); // Empty dependency array to add listener once
+
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-gray-900">
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <FaSpinner className="w-12 h-12 text-blue-500 animate-spin mb-4" />
+        </motion.div>
+        <motion.p 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="text-gray-300 text-lg"
+        >
+          Loading your cart...
+        </motion.p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-gray-900 text-red-500">
+        <MdError className="w-12 h-12 mb-4" />
+        <p className="text-xl font-semibold mb-2">Error loading cart</p>
+        <p className="text-gray-400 text-center">{error}</p>
+      </div>
+    );
+  }
+
+  if (!cartData?.products || cartData?.products.length === 0) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center p-4 bg-gray-900">
+        <FaShoppingCart className="text-5xl sm:text-6xl text-gray-600 mb-4" />
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-200 mb-2 text-center">Your cart is empty</h2>
+        <p className="text-sm sm:text-base text-gray-400 text-center max-w-md px-4">Looks like you haven't added any items to your cart yet.</p>
+        <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate('/products')}
+            className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors shadow-lg"
+          >
+            Browse Products
+          </motion.button>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8 text-center">Shopping Cart</h1>
-      
-      {/* {!cartItems?.products || cartItems?.products?.length === 0 ? (
-        <div className="text-center text-gray-500">Your cart is empty</div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cartItems?.products?.map((item) => (
-              <div key={item?.product.id} className="bg-white rounded-lg shadow-md p-6">
-                <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg">
+    <div className="min-h-[calc(100vh-4rem)] bg-gray-900 py-8 px-4 sm:px-6 lg:px-8">
+      <Toaster position="top-center" />
+      <div className="max-w-7xl mx-auto">
+        <motion.div 
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-3xl sm:text-4xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+            Your Shopping Cart
+          </h1>
+        </motion.div>
+
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="space-y-6"
+        >
+          {/* Cart Items List */}
+          {cartData?.products?.map((item) => (
+            <div key={item._id} className="bg-gray-800 rounded-xl p-6 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
                   <img 
-                    src={item?.product?.imageCover} 
-                    alt={item?.product?.title}
-                    className="w-full h-48 object-cover"
+                    src={item.product.imageCover} 
+                    alt={item.product.title} 
+                    className="w-20 h-20 object-cover rounded-lg"
                   />
-                </div>
-                <div className="mt-4">
-                  <h2 className="text-xl font-semibold text-gray-800">{item?.product?.title}</h2>
-                  <div className="mt-4 flex flex-col gap-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Quantity:</span>
-                      <div className="flex items-center gap-2">
-                        <button 
-                          onClick={() => handleUpdateQuantity(item?.product?.id, item?.count - 1)}
-                          className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                          disabled={item?.count <= 1}
-                        >
-                          -
-                        </button>
-                        <span className="w-8 text-center">{item?.count}</span>
-                        <button 
-                          onClick={() => handleUpdateQuantity(item?.product?.id, item?.count + 1)}
-                          className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-lg font-bold text-gray-900">
-                          ${((item?.product?.price || 0) * item?.count).toFixed(2)}
-                      </span>
-                      <button 
-                        onClick={() => handleRemoveItem(item?.product?.id)}
-                        className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-                      >
-                        Remove
-                      </button>
-                    </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">{item.product.title}</h3>
+                    {/* Display item price */} {/* item.price is the price of ONE unit */}
+                    <p className="text-gray-400">Price: ${item.price.toFixed(2)}</p>
+                    {/* Display total price for this item */} {/* item.price * item.count */}
+                    <p className="text-gray-400">Total: ${(item.price * item.count).toFixed(2)}</p>
                   </div>
                 </div>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleUpdateQuantity(item.product._id, item.count - 1)}
+                      disabled={item.count <= 1}
+                      className="px-3 py-1 bg-gray-700 text-white rounded-lg hover:bg-gray-600 disabled:opacity-50"
+                    >
+                      -
+                    </button>
+                    <span className="text-white">{item.count}</span>
+                    <button
+                      onClick={() => handleUpdateQuantity(item.product._id, item.count + 1)}
+                      className="px-3 py-1 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handleRemoveItem(item.product._id)}
+                    className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                  >
+                    <FaTrash />
+                  </motion.button>
+                </div>
               </div>
-            ))}
-          </div>
-          
-          <div className="mt-8 p-6 bg-gray-50 rounded-lg">
-            <div className="flex justify-between items-center">
-              <span className="text-xl font-semibold">Total:</span>
-              <span className="text-2xl font-bold text-gray-900">
-                ${(cartItems.totalCartPrice || 0).toFixed(2)}
-              </span>
             </div>
-          </div>
-        </>
-      )} */}
+          ))}
 
-      {/* ================================ */}
-      <h3 className="text-2xl font-bold mb-8 ">Total Price: ${cartItems.totalCartPrice}</h3>
-
-<div className="relative overflow-x-auto shadow-md sm:rounded-lg">
-  <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-    <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-      <tr>
-        <th scope="col" className="px-16 py-3">
-          <span className="sr-only">Image</span>
-        </th>
-        <th scope="col" className="px-6 py-3">
-          Product
-        </th>
-        <th scope="col" className="px-6 py-3">
-          Qty
-        </th>
-        <th scope="col" className="px-6 py-3">
-          Price
-        </th>
-        <th scope="col" className="px-6 py-3">
-          Action
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      {cartItems?.products?.map((item) => (
-        <tr key={item?.product.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600">
-          <td className="p-4">
-            <img src={item?.product?.imageCover} alt={item?.product?.title} className="w-16 md:w-32 max-w-full max-h-full" />
-          </td>
-          <td className="px-6 py-4 font-semibold text-gray-900 dark:text-white">
-            {item?.product?.title}
-          </td>
-          <td className="px-6 py-4">
-            <div className="flex items-center">
-              <button 
-                onClick={() => handleUpdateQuantity(item?.product?.id, item?.count - 1)}
-                className="inline-flex items-center justify-center p-1 me-3 text-sm font-medium h-6 w-6 text-gray-500 bg-white border border-gray-300 rounded-full focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700" 
-                type="button"
-                disabled={item?.count <= 1 || isLoading}
-              >
-                <span className="sr-only">Quantity button</span>
-                <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 2">
-                  <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M1 1h16" />
-                </svg>
-              </button>
-              <div>
-                <input type="number" value={item?.count} readOnly className="bg-gray-50 w-14 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block px-2.5 py-1 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
+          {/* Shipping Address Form */}
+          <div className="bg-gray-800 rounded-xl p-6 shadow-lg border border-gray-700 mt-8">
+              <h2 className="text-xl font-semibold text-white mb-4">Shipping Address</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                      <label className="block text-gray-300 text-sm mb-2" htmlFor="details">Details</label>
+                      <input 
+                          type="text" 
+                          id="details" 
+                          name="details"
+                          value={shippingAddress.details}
+                          onChange={handleShippingChange}
+                          className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:border-blue-500"
+                          required
+                      />
+                  </div>
+                  <div>
+                      <label className="block text-gray-300 text-sm mb-2" htmlFor="phone">Phone</label>
+                      <input 
+                          type="tel" 
+                          id="phone" 
+                          name="phone"
+                          value={shippingAddress.phone}
+                          onChange={handleShippingChange}
+                          className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:border-blue-500"
+                          required
+                      />
+                  </div>
+                  <div>
+                      <label className="block text-gray-300 text-sm mb-2" htmlFor="city">City</label>
+                      <input 
+                          type="text" 
+                          id="city" 
+                          name="city"
+                          value={shippingAddress.city}
+                          onChange={handleShippingChange}
+                          className="w-full px-3 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:outline-none focus:border-blue-500"
+                          required
+                      />
+                  </div>
               </div>
-              <button 
-                onClick={() => handleUpdateQuantity(item?.product?.id, item?.count + 1)}
-                className="inline-flex items-center justify-center h-6 w-6 p-1 ms-3 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-full focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700" 
-                type="button"
-                disabled={isLoading}
-              >
-                <span className="sr-only">Quantity button</span>
-                <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 18">
-                  <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 1v16M1 9h16" />
-                </svg>
-              </button>
-            </div>
-          </td>
-          <td className="px-6 py-4 font-semibold text-gray-900 dark:text-white">
-            ${((item?.product?.price || 0) * item?.count).toFixed(2)}
-          </td>
-          <td className="px-6 py-4">
-            <button 
-              onClick={() => handleRemoveItem(item?.product?.id)}
-              className="font-medium text-red-600 dark:text-red-500 hover:underline"
-              disabled={isLoading}
-            >
-              Remove
-            </button>
-          </td>
-          
-        </tr>
-      ))}
-      <tr>
-        <td colSpan={5} className="text-right p-4">
-          {cartItems?.products?.length > 0 && (
-            <button 
-              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 disabled:opacity-50" 
-              onClick={handleClearCart}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Clearing...' : 'Clear Cart'}
-            </button>
-          )}
-        </td>
-      </tr>
-    </tbody>
-  </table>
-</div>
+          </div>
 
-
+          {/* Cart Summary and Checkout Button */}
+          <div className="flex flex-col md:flex-row justify-between items-center mt-8 p-6 bg-gray-800 rounded-xl shadow-lg border border-gray-700">
+              <div className="text-xl font-bold text-white mb-4 md:mb-0">
+                Total: <span className="text-green-400">${cartData?.totalCartPrice?.toFixed(2) || '0.00'}</span>
+              </div>
+              <div className="flex flex-col md:flex-row gap-4">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleClearCart}
+                  className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors w-full md:w-auto"
+                >
+                  Clear Cart
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleCheckout}
+                  className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center space-x-2 w-full md:w-auto"
+                >
+                  <FaShoppingBag />
+                  <span>Proceed to Payment</span>
+                </motion.button>
+              </div>
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
-}
+};
 
-export default Cart
+export default Cart;

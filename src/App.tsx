@@ -15,6 +15,10 @@ import FavoriteList from './components/FavoriteList/FavoriteList';
 import  { CartProvider } from './context/CartContext/AddProvider';
 import ProtectedElement from './components/ProtucteElement';  
 import { FavoriteProvider } from './context/FavoriteContext/FavoriteProvider';
+import { WishlistProvider } from './context/WishlistContext/WishlistProvider';
+import Orders from './components/Orders/Orders';
+import NotFound from './components/NotFound/NotFound';
+import ForgetPassword from './components/Auth/ForgetPassword/ForgetPassword';
 
 export const router = createBrowserRouter([{
   path: '/',
@@ -62,23 +66,33 @@ export const router = createBrowserRouter([{
       element: <Register/>
     },
     {
+      path: 'ForgetPassword',
+      element: <ForgetPassword/>
+    },
+    {
+      path: 'Orders',
+      element: <ProtectedElement><Orders/></ProtectedElement>
+    },
+    {
       path: '*',
-      element: <h1>404</h1>
+      element: <NotFound />
     }
 
   ]
 }]);
 const App = () => {
   return (
-    <FavoriteProvider>
+    <WishlistProvider>
       <UserContext>
         <NameProvider>
+        <FavoriteProvider>
           <CartProvider>
             <RouterProvider router={router} />
           </CartProvider>
+        </FavoriteProvider>
         </NameProvider>
       </UserContext>
-    </FavoriteProvider>
+    </WishlistProvider>
   )
 }
 

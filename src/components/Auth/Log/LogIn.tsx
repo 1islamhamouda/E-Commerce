@@ -1,8 +1,8 @@
-import { Button, Checkbox, Label, TextInput } from "flowbite-react";
+import { Checkbox, Label, TextInput } from "flowbite-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import React, { useContext, useState } from "react";
+import React, { useContext} from "react";
 import img from '../../../assets/freshIcon.svg';
 import { User } from "../../../context/UserContext";
 import { authAPI } from "../../../utils/api";
@@ -83,8 +83,12 @@ const LogIn: React.FC = () => {
     onSubmit: handleLogin,
   });
 
+  if(isError){
+    console.log('there are error',error);
+    
+  }
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-blue-950 to-black p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+    <div className="min-h-screen  w-full flex items-center justify-center bg-gradient-to-br from-blue-950 to-black p-4 sm:p-6 lg:p-8 relative overflow-hidden">
        {/* Background Gradient Overlay Example (Optional) */}
        {/* <div className="absolute inset-0 bg-gradient-to-br from-blue-900 to-purple-900 opacity-30"></div> */}
 

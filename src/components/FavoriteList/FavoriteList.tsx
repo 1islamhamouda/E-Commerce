@@ -6,17 +6,17 @@ import { useFavorite } from '../../context/FavoriteContext/FavoriteProvider';
 import { removeFromWishlist, getWishlistFromAPI } from './wishApi';
 import { motion } from 'framer-motion';
 import { FaSpinner, FaHeart, FaShoppingBag } from 'react-icons/fa';
-import { MdError } from 'react-icons/md';
 
-interface Product {
-  _id: string;
-  title: string;
-  imageCover: string;
-  price: number;
-  category: {
-    name: string;
-  };
-}
+
+// interface Product {
+//   _id: string;
+//   title: string;
+//   imageCover: string;
+//   price: number;
+//   category: {
+//     name: string;
+//   };
+// }
 
 const FavoriteList: React.FC = () => {
   const navigate = useNavigate();

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { Button } from "flowbite-react";
+// import { Button } from "flowbite-react";
 import { Link } from "react-router-dom";
 import { motion } from 'framer-motion';
 import { FaSpinner, FaStar, FaShoppingCart, FaHeart } from 'react-icons/fa';
@@ -180,11 +180,11 @@ export default function ProductDetails() {
                         transition={{ duration: 0.5 }}
                         className="relative group"
                     >
-                        <div className="aspect-square rounded-2xl overflow-hidden bg-gray-800 shadow-xl">
+                        <div className="max-w-[400px] max-h-[450px] mx-auto rounded-2xl overflow-hidden bg-gray-800 shadow-xl">
                             <motion.img 
                                 src={productDetails.imageCover} 
                                 alt={productDetails.name} 
-                                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                                className="w-full h-full object-contain transform group-hover:scale-110 transition-transform duration-500"
                                 whileHover={{ rotate: [0, -5, 5, -5, 0] }}
                                 transition={{ duration: 0.5 }}
                             />

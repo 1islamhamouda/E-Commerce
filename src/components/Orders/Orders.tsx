@@ -1,10 +1,9 @@
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { FaSpinner, FaMapMarkerAlt, FaPhoneAlt } from 'react-icons/fa';
 import { MdError } from 'react-icons/md';
 import toast, { Toaster } from 'react-hot-toast';
-import { User } from '../../context/UserContext'; // Import User context
 
 interface Product {
   _id: string; // Added _id based on API response
@@ -54,55 +53,35 @@ const Orders = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const token = localStorage.getItem('token'); // Assuming token is stored in localStorage
-  const userContext = useContext(User); // Get user context
-  // Access user ID using .id based on UserData interface
-  const userId = userContext?.user?.id; // Fix: changed _id to id
+  // const userContext = useContext(User);
 
   useEffect(() => {
     const fetchOrders = async () => {
-      if (!token) {
-        setError('Please log in to view your orders.');
-        setIsLoading(false);
-        toast.error('Please log in to view your orders.');
-        return;
-      }
-      
-      // Ensure userId is available before fetching orders
-      if (!userId) {
-          setError('User not identified. Please try logging in again.');
-          setIsLoading(false);
-          toast.error('User not identified.');
-          return;
-      }
-
       try {
-        setIsLoading(true);
-        // Use the user-specific orders endpoint
-        // Based on the web search result, the API returns an array directly.
-        const { data } = await axios.get<Order[]>(
-          `https://ecommerce.routemisr.com/api/v1/orders/user/${userId}`,
-          {
-            headers: { token },
-          }
-        );
-        setOrders(data); // Set the array of orders directly
-        setError(null); // Clear error on successful fetch
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Please log in to view your orders.');
+        }
 
+        const { data } = await axios.get<Order[]>(
+          'https://ecommerce.routemisr.com/api/v1/orders/user/me',
+          { headers: { token } }
+        );
+        
+        setOrders(data);
+        setError(null);
       } catch (err: any) {
-        console.error('Error fetching orders:', err);
-        // Check for specific error response structure if available
-        setError(err.response?.data?.message || 'Failed to fetch orders. Please try again.');
-        toast.error(err.response?.data?.message || 'Failed to fetch orders.');
-        setOrders([]); // Clear previous orders on error
+        const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch orders';
+        setError(errorMessage);
+        toast.error(errorMessage);
+        setOrders([]);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchOrders();
-    // Add token and userId to the dependency array
-  }, [token, userId]);
+  }, []);
 
   if (isLoading) {
     return (
@@ -136,7 +115,7 @@ const Orders = () => {
     );
   }
 
-  if (!orders || orders.length === 0) {
+  if (!orders.length) {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-gray-900 text-gray-300">
         <motion.div

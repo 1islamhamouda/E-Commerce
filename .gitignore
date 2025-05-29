@@ -8,7 +8,7 @@
 
 # production
 /build
-/dist
+# /dist  # Commented out to allow committing dist folder
 
 # misc
 .DS_Store

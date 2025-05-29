@@ -3,7 +3,7 @@ import CategoriesSlide from "../../SideDesigns/CategoriesSlide/CategoriesSlide";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
-import { useName } from "../../context/NameProvider";
+// import { useName } from "../../context/NameProvider";
 import FavoriteButton from "../FavoriteList/FavoriteButton";
 import Search from "./Search";
 import { User } from "../../context/UserContext";
@@ -34,7 +34,7 @@ interface Product {
 
 const Home: React.FC = () => {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
-  const { name } = useName();
+  // const { name } = useName();
   const { addToCart } = useCart();
   
   const userContext = useContext(User);
@@ -143,7 +143,7 @@ const Home: React.FC = () => {
 
   if (isError) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center bg-gray-900">
+      <div className="min-h-[calc(100vh-4rem)]  flex flex-col items-center justify-center bg-gray-900">
         <motion.div
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}

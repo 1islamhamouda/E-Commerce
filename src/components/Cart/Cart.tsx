@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useCart } from "../../context/CartContext/AddProvider";
 import toast, { Toaster } from 'react-hot-toast';
-import { FaTrash, FaMinus, FaPlus, FaShoppingCart } from 'react-icons/fa';
+import { FaTrash, FaShoppingCart } from 'react-icons/fa';
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { motion } from 'framer-motion';

@@ -10,7 +10,7 @@ const Categories = () => {
     return axios.get('https://ecommerce.routemisr.com/api/v1/categories');
   }
 
-  const { data, error, isError, isLoading } = useQuery({
+  const { data, isError, isLoading } = useQuery({
     queryKey: ['categories'],
     queryFn: getCategories,
   })

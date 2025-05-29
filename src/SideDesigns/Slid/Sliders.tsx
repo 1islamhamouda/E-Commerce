@@ -66,7 +66,7 @@ export default function Sliders() {
                 </div>
 
                 {/* Side Images */}
-                <div className="w-full lg:w-1/3 flex flex-col gap-6">
+                <div className="hidden sm:flex w-full lg:w-1/3 flex-col gap-6">
                     <div className="relative group">
                         <img 
                             src={img3} 

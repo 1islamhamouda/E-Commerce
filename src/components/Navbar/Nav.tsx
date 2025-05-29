@@ -78,7 +78,7 @@ const Nav = () => {
 
               <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }}>
                 <NavLink to="/Favorite" className="relative">
-                  <FaHeart className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-300 hover:text-red-400 transition-colors" />
+                  <FaHeart className="w-4 h-4 sm:w-5 sm:h-5 mx-5 md:w-6 md:h-6 text-gray-300 hover:text-red-400 transition-colors" />
                   {wishlistItems?.length > 0 && (
                     <span className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 bg-red-500 text-white text-[10px] sm:text-xs rounded-full w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 flex items-center justify-center">
                       {wishlistItems.length}
@@ -90,7 +90,7 @@ const Nav = () => {
           )}
 
           <Dropdown 
-            label={<FaUser className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-300 hover:text-blue-400 transition-colors" />} 
+            label={<FaUser className="w-4 h-4 sm:w-5  sm:h-5 md:w-6 md:h-6 text-gray-300 hover:text-blue-400 transition-colors" />} 
             dismissOnClick={true} 
             className="relative"
           >
@@ -135,11 +135,11 @@ const Nav = () => {
               </>
             )}
           </Dropdown>
-          <NavbarToggle className="text-gray-300 hover:text-blue-400 transition-colors w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+          <NavbarToggle className="text-gray-300 hover:text-blue-400 pe-6 transition-colors w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
         </div>
 
         {token && (
-          <NavbarCollapse className="navCollapse md:flex-row text-center py-2 md:py-1 md:space-x-3 lg:space-x-4 xl:space-x-6">
+          <NavbarCollapse className="navCollapse  md:flex-row text-center py-2 md:py-1 md:space-x-3 lg:space-x-4 xl:space-x-6">
             <motion.div whileHover={{ scale: 1.05 }} className="py-1.5 sm:py-2 md:py-0">
               <NavLink 
                 to="/" 

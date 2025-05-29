@@ -1,5 +1,5 @@
 import axios from "axios";
-import toast from 'react-hot-toast';
+// import toast from 'react-hot-toast';
 
 const BASE_URL = 'https://ecommerce.routemisr.com/api/v1';
 

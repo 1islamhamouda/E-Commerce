@@ -11,7 +11,7 @@ const Brands = () => {
     return axios.get('https://ecommerce.routemisr.com/api/v1/brands')
   }
   
-  const { data, error, isError, isLoading } = useQuery({
+  const { data,isError, isLoading } = useQuery({
     queryKey: ['brands'],
     queryFn: getBrands,
   })

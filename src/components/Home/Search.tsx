@@ -1,5 +1,5 @@
 import './Home.css'
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import toast from "react-hot-toast";
 
 interface Product {

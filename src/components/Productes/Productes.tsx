@@ -29,11 +29,11 @@ interface Product {
   priceAfterDiscount: number;
 }
 
-interface ProductsResponse {
-  data: {
-    data: Product[];
-  };
-}
+// interface ProductsResponse {
+//   data: {
+//     data: Product[];
+//   };
+// }
 
 const Productes = () => {
   const [searchResults, setSearchResults] = useState<Product[]>([]);
@@ -42,7 +42,7 @@ const Productes = () => {
   if (!userContext) {
     throw new Error('UserContext is not provided');
   }
-  const { user, token } = userContext;
+  const {  token } = userContext;
 
   const { addToCart } = useCart();
 

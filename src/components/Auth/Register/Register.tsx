@@ -1,13 +1,13 @@
-import { Button, Checkbox, Label, TextInput } from "flowbite-react";
+import {  Checkbox, Label, TextInput } from "flowbite-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import axios from "axios";
-import React, { useContext, useState } from "react";
+import  { useContext, useState } from "react";
 import { useName } from "../../../context/NameProvider";
 import img from '../../../assets/freshIcon.svg';
 import { User } from "../../../context/UserContext";
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { FaSpinner, FaUser, FaEnvelope, FaLock, FaPhone, FaCheck } from 'react-icons/fa';
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -47,7 +47,7 @@ const Register = () => {
   if (!userContext) {
     throw new Error("User context is not provided");
   }
-  const { setUser } = userContext;
+  // const { setUser } = userContext;
 
   const handleRegister = async (values: RegisterDetails) => {
     setIsLoading(true);
@@ -104,6 +104,11 @@ const Register = () => {
     validationSchema,
     onSubmit: handleRegister,
   });
+
+  if(isError){
+    console.log('errro',error);
+    
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 via-blue-950 to-black p-4 sm:p-6 lg:p-8 relative overflow-hidden">
